@@ -27,8 +27,8 @@ Un servidor HTTP simple construido con Flask que demuestra diferentes códigos d
 
 ```bash
 # Clonar o descargar el proyecto
-git clone htts-status-code
-cd htts-status-code
+git clone http-status-code
+cd http-status-code
 
 # Instalar dependencias
 pip install flask==3.0.0

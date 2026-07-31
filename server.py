@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template_string
 from functools import wraps
 import time
+import os
 
 # Content Security Policy header
 CSP_POLICY = "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
@@ -15,11 +16,11 @@ Flask.make_response = _csp_make_response
 app = Flask(__name__)
 
 # Bearer token for authentication
-VALID_TOKEN = "my-secret-token-12345"
+VALID_TOKEN = os.environ.get("BEARER_TOKEN", "my-secret-token-12345")
 
 # Rate limiting (simple in-memory counter)
 request_counts = {}
-RATE_LIMIT = 5  # requests per minute
+RATE_LIMIT = int(os.environ.get("RATE_LIMIT", 5))  # requests per minute
 
 # HTML templates
 HTML_TEMPLATE = """
