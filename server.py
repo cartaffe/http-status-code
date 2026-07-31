@@ -76,6 +76,24 @@ HTML_TEMPLATE = """
             <li>Token: <code>my-secret-token-12345</code></li>
         </ul>
         <p>Example: <code>curl -H "Authorization: Bearer my-secret-token-12345" http://localhost:5000/protected</code></p>
+
+        <h3>Received Headers:</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+                <tr style="background-color: #f2f2f2; text-align: left;">
+                    <th style="padding: 8px; border: 1px solid #ddd; width: 66.66%;">Header</th>
+                    <th style="padding: 8px; border: 1px solid #ddd; width: 33.33%;">Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, value in request.headers.items() %}
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{{ key }}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{{ value }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </body>
 </html>
