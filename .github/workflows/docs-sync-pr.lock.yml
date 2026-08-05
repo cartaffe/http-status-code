@@ -56,7 +56,8 @@
 name: "Docs Sync PR"
 on:
   schedule:
-    - cron: "36 2 * * 1-5"  # Friendly format: daily on weekdays (scattered)
+    #- cron: "36 2 * * 1-5"  # Friendly format: daily on weekdays (scattered)
+    - cron: "36 2 1 * *"  # Friendly format: daily on weekdays (scattered)
   workflow_dispatch:
     inputs:
       aw_context:
