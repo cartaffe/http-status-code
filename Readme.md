@@ -79,7 +79,11 @@ docker run -d -p 5000:5000 -e BEARER_TOKEN="tu-token-secreto" http-status-code-s
 
 ### Rate Limiting
 
-Por defecto, el endpoint `/rate-limited` permite 5 peticiones por minuto por IP. Puedes modificar `RATE_LIMIT` en el código.
+Por defecto, el endpoint `/rate-limited` permite 5 peticiones por minuto por IP. Puedes modificar este límite con la variable de entorno `RATE_LIMIT`:
+
+```bash
+docker run -d -p 5000:5000 -e RATE_LIMIT=10 http-status-code-server
+```
 
 ## Endpoints
 
