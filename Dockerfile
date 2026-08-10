@@ -18,7 +18,7 @@ ENV PYTHONUNBUFFERED=1 \
     FLASK_APP=server.py
 
 # Install Flask
-RUN pip install --no-cache-dir flask==3.0.0
+RUN pip install --no-cache-dir flask==3.0.0 gunicorn==21.2.0
 
 # Copy the application file
 COPY server.py .
@@ -31,4 +31,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/')" || exit 1
 
 # Run the application
-CMD ["python", "server.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "4", "server:app"]

@@ -16,6 +16,7 @@ Un servidor HTTP simple construido con Flask que demuestra diferentes códigos d
 ### Ejecución local
 - Python 3.8 o superior
 - Flask 3.0.0
+- Gunicorn 21.2.0
 
 ### Ejecución con Docker
 - Docker instalado
@@ -31,9 +32,12 @@ git clone http-status-code
 cd http-status-code
 
 # Instalar dependencias
-pip install flask==3.0.0
+pip install flask==3.0.0 gunicorn==21.2.0
 
-# Ejecutar el servidor
+# Ejecutar con gunicorn (recomendado)
+gunicorn --bind 0.0.0.0:5000 --workers 2 --threads 4 server:app
+
+# O directamente con Python (modo desarrollo)
 python server.py
 ```
 
@@ -80,6 +84,22 @@ docker run -d -p 5000:5000 -e BEARER_TOKEN="tu-token-secreto" http-status-code-s
 ### Rate Limiting
 
 Por defecto, el endpoint `/rate-limited` permite 5 peticiones por minuto por IP. Puedes modificar `RATE_LIMIT` en el código.
+
+### Modo Debug
+
+El modo debug está desactivado por defecto. Para habilitarlo al ejecutar con `python server.py`:
+
+```bash
+FLASK_DEBUG=1 python server.py
+```
+
+En Docker:
+
+```bash
+docker run -d -p 5000:5000 -e FLASK_DEBUG=1 http-status-code-server
+```
+
+> **Nota:** El contenedor usa gunicorn en modo producción. `FLASK_DEBUG=1` solo aplica cuando se ejecuta con `python server.py`.
 
 ## Endpoints
 

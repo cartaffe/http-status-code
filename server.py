@@ -1,19 +1,16 @@
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify
 from functools import wraps
 import time
 import os
 
 # Content Security Policy header
 CSP_POLICY = "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
-# Monkey patch Flask to inject CSP into every response
-_original_make_response = Flask.make_response
-def _csp_make_response(self, rv):
-    response = _original_make_response(self, rv)
+app = Flask(__name__)
+
+@app.after_request
+def add_csp_header(response):
     response.headers.setdefault("Content-Security-Policy", CSP_POLICY)
     return response
-Flask.make_response = _csp_make_response
-
-app = Flask(__name__)
 
 # Bearer token for authentication
 VALID_TOKEN = os.environ.get("BEARER_TOKEN", "my-secret-token-12345")
@@ -100,6 +97,15 @@ HTML_TEMPLATE = """
 </html>
 """
 
+PAGE_TEMPLATE = app.jinja_env.from_string(HTML_TEMPLATE)
+
+
+def render_page(title, status_code, status_class, message):
+    ctx = dict(title=title, status_code=status_code, status_class=status_class, message=message)
+    app.update_template_context(ctx)
+    return PAGE_TEMPLATE.render(ctx)
+
+
 # Bearer Token Auth decorator
 def require_bearer_auth(f):
     @wraps(f)
@@ -107,7 +113,7 @@ def require_bearer_auth(f):
         auth_header = request.headers.get('Authorization')
         
         if not auth_header:
-            return render_template_string(HTML_TEMPLATE,
+            return render_page(
                 title="401 Unauthorized",
                 status_code="401",
                 status_class="error",
@@ -116,7 +122,7 @@ def require_bearer_auth(f):
         
         # Check if it starts with "Bearer "
         if not auth_header.startswith('Bearer '):
-            return render_template_string(HTML_TEMPLATE,
+            return render_page(
                 title="401 Unauthorized",
                 status_code="401",
                 status_class="error",
@@ -126,7 +132,7 @@ def require_bearer_auth(f):
         token = auth_header.split(' ')[1]
         
         if token != VALID_TOKEN:
-            return render_template_string(HTML_TEMPLATE,
+            return render_page(
                 title="401 Unauthorized",
                 status_code="401",
                 status_class="error",
@@ -139,7 +145,7 @@ def require_bearer_auth(f):
 # Routes
 @app.route('/')
 def home():
-    return render_template_string(HTML_TEMPLATE,
+    return render_page(
         title="HTTP Status Code Demo",
         status_code="200 OK",
         status_class="success",
@@ -148,7 +154,7 @@ def home():
 
 @app.route('/success')
 def success():
-    return render_template_string(HTML_TEMPLATE,
+    return render_page(
         title="Success",
         status_code="200 OK",
         status_class="success",
@@ -158,7 +164,7 @@ def success():
 @app.route('/protected')
 @require_bearer_auth
 def protected():
-    return render_template_string(HTML_TEMPLATE,
+    return render_page(
         title="Protected Resource",
         status_code="200 OK",
         status_class="success",
@@ -167,7 +173,7 @@ def protected():
 
 @app.route('/created')
 def created():
-    return render_template_string(HTML_TEMPLATE,
+    return render_page(
         title="201 Created",
         status_code="201",
         status_class="success",
@@ -176,7 +182,7 @@ def created():
 
 @app.route('/accepted')
 def accepted():
-    return render_template_string(HTML_TEMPLATE,
+    return render_page(
         title="202 Accepted",
         status_code="202",
         status_class="success",
@@ -202,7 +208,7 @@ def not_modified():
 
 @app.route('/bad-request')
 def bad_request():
-    return render_template_string(HTML_TEMPLATE,
+    return render_page(
         title="400 Bad Request",
         status_code="400",
         status_class="error",
@@ -211,7 +217,7 @@ def bad_request():
 
 @app.route('/forbidden')
 def forbidden():
-    return render_template_string(HTML_TEMPLATE,
+    return render_page(
         title="403 Forbidden",
         status_code="403",
         status_class="error",
@@ -220,7 +226,7 @@ def forbidden():
 
 @app.route('/notfound')
 def not_found():
-    return render_template_string(HTML_TEMPLATE,
+    return render_page(
         title="404 Not Found",
         status_code="404",
         status_class="error",
@@ -229,7 +235,7 @@ def not_found():
 
 @app.route('/error')
 def internal_error():
-    return render_template_string(HTML_TEMPLATE,
+    return render_page(
         title="500 Internal Server Error",
         status_code="500",
         status_class="error",
@@ -238,7 +244,7 @@ def internal_error():
 
 @app.route('/method-not-allowed', methods=['GET'])
 def method_not_allowed():
-    return render_template_string(HTML_TEMPLATE,
+    return render_page(
         title="405 Method Not Allowed",
         status_code="405",
         status_class="error",
@@ -247,7 +253,7 @@ def method_not_allowed():
 
 @app.route('/conflict')
 def conflict():
-    return render_template_string(HTML_TEMPLATE,
+    return render_page(
         title="409 Conflict",
         status_code="409",
         status_class="error",
@@ -256,7 +262,7 @@ def conflict():
 
 @app.route('/gone')
 def gone():
-    return render_template_string(HTML_TEMPLATE,
+    return render_page(
         title="410 Gone",
         status_code="410",
         status_class="error",
@@ -272,14 +278,14 @@ def rate_limited():
     request_counts[key] = request_counts.get(key, 0) + 1
     
     if request_counts[key] > RATE_LIMIT:
-        return render_template_string(HTML_TEMPLATE,
+        return render_page(
             title="429 Too Many Requests",
             status_code="429",
             status_class="error",
             message=f"Rate limit exceeded. Maximum {RATE_LIMIT} requests per minute allowed."
         ), 429, {'Retry-After': '60'}
     
-    return render_template_string(HTML_TEMPLATE,
+    return render_page(
         title="Rate Limited Endpoint",
         status_code="200 OK",
         status_class="success",
@@ -288,7 +294,7 @@ def rate_limited():
 
 @app.route('/not-implemented')
 def not_implemented():
-    return render_template_string(HTML_TEMPLATE,
+    return render_page(
         title="501 Not Implemented",
         status_code="501",
         status_class="error",
@@ -297,7 +303,7 @@ def not_implemented():
 
 @app.route('/service-unavailable')
 def service_unavailable():
-    return render_template_string(HTML_TEMPLATE,
+    return render_page(
         title="503 Service Unavailable",
         status_code="503",
         status_class="error",
@@ -307,7 +313,7 @@ def service_unavailable():
 # Catch-all for actual 404s
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template_string(HTML_TEMPLATE,
+    return render_page(
         title="404 Not Found",
         status_code="404",
         status_class="error",
@@ -324,4 +330,4 @@ if __name__ == '__main__':
     print("  curl http://localhost:5000/forbidden")
     print("  curl http://localhost:5000/created")
     print("  curl http://localhost:5000/rate-limited")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=os.environ.get("FLASK_DEBUG") == "1", host='0.0.0.0', port=5000)

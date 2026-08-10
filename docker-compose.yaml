@@ -9,7 +9,7 @@ services:
       - "5000:5000"
     environment:
       #- FLASK_ENV=production
-      - FLASK_ENV=development
+      - FLASK_ENV=production
       - BEARER_TOKEN=my-secret-token-12345
       - RATE_LIMIT=5
     restart: unless-stopped
