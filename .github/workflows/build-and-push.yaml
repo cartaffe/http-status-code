@@ -15,7 +15,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
     - name: docker login
       run: | # log into docker hub account
         docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
